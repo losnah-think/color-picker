@@ -46,9 +46,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           throw new Error("이메일과 비밀번호를 입력해주세요.")
         }
 
+        const email = credentials.email.trim().toLowerCase()
+        const password = credentials.password.trim()
+
         try {
           const user = await prisma.user.findUnique({
-            where: { email: credentials.email },
+            where: { email },
             select: {
               id: true,
               email: true,
@@ -66,7 +69,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }
 
           const isPasswordValid = await bcrypt.compare(
-            credentials.password,
+            password,
             user.password
           )
 

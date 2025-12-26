@@ -11,9 +11,9 @@ export async function POST(request: NextRequest) {
     let email, password, name
     try {
       const body = await request.json()
-      email = body.email
-      password = body.password
-      name = body.name
+      email = body.email?.trim().toLowerCase()
+      password = body.password?.trim()
+      name = body.name?.trim()
     } catch (parseError) {
       console.error("JSON parse error:", parseError)
       return NextResponse.json(
