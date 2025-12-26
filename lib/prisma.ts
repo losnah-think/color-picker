@@ -11,3 +11,10 @@ export const getPrismaClient = (): PrismaClient => {
         ? ['query', 'warn', 'error'] 
         : ['error'],
       errorFormat: 'pretty',
+    })
+  }
+  return globalForPrisma.prisma
+}
+
+export { getPrismaClient as prisma }
+

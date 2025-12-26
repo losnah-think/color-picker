@@ -15,6 +15,11 @@ try {
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
+  useSecureCookies: process.env.NODE_ENV === 'production',
+  pages: {
+    signIn: '/auth/signin',
+    error: '/auth/error',
+  },
   adapter: PrismaAdapter(prisma),
   debug: process.env.NODE_ENV === 'development',
   providers: [
@@ -83,7 +88,48 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     maxAge: 30 * 24 * 60 * 60,
     updateAge: 24 * 60 * 60,
   },
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === 'production' 
+        ? '__Secure-authjs.session-token'
+        : 'authjs.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+    callbackUrl: {
+      name: process.env.NODE_ENV === 'production'
+        ? '__Secure-authjs.callback-url'
+        : 'authjs.callback-url',
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+    csrfToken: {
+      name: process.env.NODE_ENV === 'production'
+        ? '__Secure-authjs.csrf-token'
+        : 'authjs.csrf-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  },
   callbacks: {
+    async redirect({ url, baseUrl }: any) {
+      // 절대 URL인 경우 그대로 사용
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      // 다른 도메인의 URL은 baseUrl로 리다이렉트
+      else if (new URL(url).origin === baseUrl) return url
+      return baseUrl
+    },
     async jwt({ token, user, account }: any) {
       if (user) {
         token.sub = user.id
