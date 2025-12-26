@@ -81,8 +81,13 @@ export async function POST(request: NextRequest) {
 
     console.log("Registration successful:", user.id)
 
+    // 회원가입 성공 응답 (프론트에서 자동 로그인 처리)
     return NextResponse.json(
-      { message: "회원가입이 완료되었습니다.", userId: user.id },
+      { 
+        message: "회원가입이 완료되었습니다.", 
+        userId: user.id,
+        success: true 
+      },
       { status: 201 }
     )
   } catch (error: any) {

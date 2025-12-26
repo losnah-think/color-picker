@@ -54,39 +54,45 @@ export default function SignUpPage() {
 
       console.log("Registration successful, attempting auto-login...")
 
-      // 회원가입 성공 후 자동 로그인
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      })
+      // 회원가입 성공 후 자동 로그인 (최대 3회 시도)
+      let loginSuccess = false
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        console.log(`Auto-login attempt ${attempt}/3...`)
+        
+        const result = await signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        })
 
-      console.log("Sign in result:", result)
+        console.log(`Attempt ${attempt} result:`, result)
 
-      if (result?.error) {
-        console.error("Login error:", result.error)
-        setError("회원가입은 완료되었으나 로그인에 실패했습니다. 로그인 페이지에서 다시 시도해주세요.")
+        if (result?.ok) {
+          console.log("Login successful!")
+          loginSuccess = true
+          break
+        }
+
+        // 마지막 시도가 아니면 잠시 대기 후 재시도
+        if (attempt < 3) {
+          await new Promise(resolve => setTimeout(resolve, 500))
+        }
+      }
+
+      if (!loginSuccess) {
+        console.error("Auto-login failed after 3 attempts")
+        setError("회원가입은 완료되었으나 자동 로그인에 실패했습니다. 로그인 페이지에서 다시 시도해주세요.")
         setTimeout(() => {
-          router.push("/auth/signin")
+          router.push(`/auth/signin?email=${encodeURIComponent(email)}`)
         }, 2000)
         return
       }
 
-      if (result?.ok) {
-        console.log("Login successful, redirecting...")
-        // 세션이 저장될 시간 주기
-        await new Promise(resolve => setTimeout(resolve, 500))
-        router.refresh()
-        // 약간의 지연 후 리다이렉트
-        await new Promise(resolve => setTimeout(resolve, 300))
-        router.push("/")
-      } else {
-        console.error("Sign in did not return ok")
-        setError("로그인 중 오류가 발생했습니다. 로그인 페이지에서 다시 시도해주세요.")
-        setTimeout(() => {
-          router.push("/auth/signin")
-        }, 2000)
-      }
+      // 로그인 성공 - 세션 업데이트 대기
+      await new Promise(resolve => setTimeout(resolve, 800))
+      router.refresh()
+      await new Promise(resolve => setTimeout(resolve, 500))
+      router.push("/")
     } catch (error: any) {
       console.error("Signup error:", error)
       setError(error.message || "회원가입 중 오류가 발생했습니다.")

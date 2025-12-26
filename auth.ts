@@ -42,7 +42,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials: any) {
+        console.log("CredentialsProvider authorize called with email:", credentials?.email)
+        
         if (!credentials?.email || !credentials?.password) {
+          console.error("Missing email or password in credentials")
           throw new Error("이메일과 비밀번호를 입력해주세요.")
         }
 
@@ -61,10 +64,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           })
 
           if (!user) {
+            console.error("User not found:", email)
             throw new Error("등록되지 않은 이메일입니다.")
           }
 
           if (!user.password) {
+            console.error("User has no password set:", email)
             throw new Error("비밀번호가 설정되지 않았습니다.")
           }
 
@@ -74,23 +79,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           )
 
           console.log("Password validation:", {
-            email: credentials.email,
-            storedHash: user.password ? user.password.substring(0, 20) + "..." : null,
+            email,
             isValid: isPasswordValid,
           })
 
           if (!isPasswordValid) {
+            console.error("Invalid password for user:", email)
             throw new Error("비밀번호가 올바르지 않습니다.")
           }
 
+          console.log("Authorization successful for:", email)
           return {
             id: user.id,
             email: user.email,
             name: user.name,
           }
         } catch (error: any) {
-          console.error("Authorization error:", error)
-          throw new Error(error.message || "로그인 중 오류가 발생했습니다.")
+          console.error("Authorization error:", error.message)
+          throw error
         }
       },
     }),
