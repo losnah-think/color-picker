@@ -19,7 +19,7 @@ export async function GET() {
     
     if (!subscription) {
       return NextResponse.json({
-        status: "INACTIVE",
+        status: "ACTIVE",  // FREE 플랜은 기본값이 ACTIVE
         plan: "FREE",
       })
     }
