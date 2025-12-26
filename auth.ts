@@ -210,19 +210,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.id = token.sub
       }
 
-      // Google OAuth 사용자를 위해 구독 정보 확인/생성
-      if (token.provider === "google" && token.sub) {
+      // 모든 사용자(Credentials, Google OAuth 포함)에 대해 구독 정보 확인/생성
+      if (token.sub) {
         try {
           const existingSubscription = await prisma.subscription.findUnique({
             where: { userId: token.sub },
           })
 
           if (!existingSubscription) {
-            console.log("Creating subscription for Google user:", token.sub)
+            console.log("Creating subscription for user:", token.sub)
             await prisma.subscription.create({
               data: {
                 userId: token.sub,
-                status: "ACTIVE",  // FREE는 즉시 활용 가능
+                status: "ACTIVE",  // 모든 신규 사용자는 ACTIVE FREE 플랜으로 시작
                 plan: "FREE",
               },
             })
