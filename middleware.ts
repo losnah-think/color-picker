@@ -1,8 +1,7 @@
-import { auth } from "@/auth"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // 공개 경로 - 인증 필요 없음
@@ -13,10 +12,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // 보호된 경로는 인증 체크
-  const session = await auth()
+  // 보호된 경로: 세션 쿠키 확인
+  const sessionToken = 
+    request.cookies.get("authjs.session-token")?.value ||
+    request.cookies.get("__Secure-authjs.session-token")?.value
 
-  if (!session) {
+  if (!sessionToken) {
     const signInUrl = new URL("/auth/signin", request.url)
     signInUrl.searchParams.set("callbackUrl", pathname)
     return NextResponse.redirect(signInUrl)
