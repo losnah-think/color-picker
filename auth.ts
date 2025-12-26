@@ -5,10 +5,18 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import { getPrismaClient } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 
-const prisma = getPrismaClient()
+let prisma: any
+try {
+  prisma = getPrismaClient()
+} catch (error) {
+  console.error("Failed to initialize Prisma:", error)
+  throw new Error("Database connection failed")
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   adapter: PrismaAdapter(prisma),
+  debug: process.env.NODE_ENV === 'development',
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -116,9 +124,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session
     },
   },
-  pages: {
-    signIn: "/auth/signin",
-    error: "/auth/error",
-  },
-  trustHost: true,
 })

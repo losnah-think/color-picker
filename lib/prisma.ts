@@ -10,9 +10,4 @@ export const getPrismaClient = (): PrismaClient => {
       log: process.env.NODE_ENV === 'development' 
         ? ['query', 'warn', 'error'] 
         : ['error'],
-    })
-  }
-  return globalForPrisma.prisma
-}
-
-export { getPrismaClient as prisma }
+      errorFormat: 'pretty',
