@@ -58,6 +58,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             user.password
           )
 
+          console.log("Password validation:", {
+            email: credentials.email,
+            storedHash: user.password ? user.password.substring(0, 20) + "..." : null,
+            isValid: isPasswordValid,
+          })
+
           if (!isPasswordValid) {
             throw new Error("비밀번호가 올바르지 않습니다.")
           }
