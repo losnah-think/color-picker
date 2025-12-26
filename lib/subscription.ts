@@ -16,11 +16,16 @@ export async function checkSubscription(userId: string) {
     return false
   }
 
-  // 구독이 활성화되어 있고, 만료일이 지나지 않았는지 확인
+  // 구독이 활성화되어 있는지만 확인
+  // Stripe 기반 만료일 확인은 선택적
   const isValid =
     subscription.status === 'ACTIVE' &&
-    subscription.stripeCurrentPeriodEnd &&
-    subscription.stripeCurrentPeriodEnd.getTime() > Date.now()
+    (
+      // Stripe 구독인 경우: 만료일 확인
+      (subscription.stripeCurrentPeriodEnd && subscription.stripeCurrentPeriodEnd.getTime() > Date.now()) ||
+      // 일반 구독인 경우: status만 확인
+      (!subscription.stripeCurrentPeriodEnd)
+    )
 
   return isValid
 }
