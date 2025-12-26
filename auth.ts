@@ -222,7 +222,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             await prisma.subscription.create({
               data: {
                 userId: token.sub,
-                status: "INACTIVE",
+                status: "ACTIVE",  // FREE는 즉시 활용 가능
                 plan: "FREE",
               },
             })

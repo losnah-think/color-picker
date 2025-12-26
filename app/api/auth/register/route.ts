@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     await prisma.subscription.create({
       data: {
         userId: user.id,
-        status: 'INACTIVE',
+        status: 'ACTIVE',  // FREE는 즉시 활용 가능
         plan: 'FREE',
       },
     })

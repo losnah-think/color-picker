@@ -87,10 +87,17 @@ export default function Home() {
       return;
     }
 
-    if (!subscription || subscription.status !== "ACTIVE") {
+    // 구독 상태 확인 (FREE는 INACTIVE 상태여도 사용 가능, 유료는 ACTIVE만 가능)
+    const isFreeOrActive = subscription.plan === "FREE" || subscription.status === "ACTIVE";
+    if (!isFreeOrActive) {
       if (confirm("구독이 필요한 기능입니다. 요금제 페이지로 이동하시겠습니까?")) {
         router.push("/pricing");
       }
+      return;
+    }
+
+    if (!subscription || !subscription.plan) {
+      alert("구독 정보가 없습니다.");
       return;
     }
 
