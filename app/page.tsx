@@ -44,6 +44,22 @@ export default function Home() {
     "현대적 서재. 차가운 톤과 초록 식물. 집중력 있고 신선한 공간"
   ];
 
+  // 구독 플랜별 월 제한 횟수
+  const getMonthlyLimit = (plan: string) => {
+    switch (plan) {
+      case "FREE":
+        return 5;
+      case "BASIC":
+        return 50;
+      case "PRO":
+        return -1; // 무제한
+      case "ENTERPRISE":
+        return -1; // 무제한
+      default:
+        return 5;
+    }
+  };
+
   const handleGeneratePalette = async () => {
     if (!session) {
       router.push("/auth/signin");
@@ -165,14 +181,26 @@ export default function Home() {
             <h1 className="text-xl font-semibold text-slate-900 dark:text-white">
               Color Palette Generator
             </h1>
-            {subscription && (
-              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                subscription.status === "ACTIVE" 
-                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                  : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
-              }`}>
-                {subscription.plan}
-              </span>
+            {subscription && subscription.status === "ACTIVE" && (
+              <div className="flex items-center gap-3">
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  subscription.status === "ACTIVE" 
+                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                    : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
+                }`}>
+                  {subscription.plan}
+                </span>
+                {getMonthlyLimit(subscription.plan) > 0 && (
+                  <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded">
+                    월 {getMonthlyLimit(subscription.plan)}회 중
+                  </span>
+                )}
+                {getMonthlyLimit(subscription.plan) === -1 && (
+                  <span className="text-xs font-medium text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30 px-2 py-1 rounded">
+                    무제한
+                  </span>
+                )}
+              </div>
             )}
           </div>
           <div className="flex items-center gap-4">

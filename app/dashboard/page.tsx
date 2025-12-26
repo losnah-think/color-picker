@@ -2,10 +2,10 @@
 
 import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export default function DashboardPage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
   const [subscription, setSubscription] = useState<any>(null)
   const [loading, setLoading] = useState(false)
@@ -18,8 +18,15 @@ export default function DashboardPage() {
   })
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
-  // 구독 정보 로드
-  useState(() => {
+  // 로그인 확인 및 구독 정보 로드
+  useEffect(() => {
+    if (status === "loading") return
+
+    if (!session) {
+      router.push("/auth/signin")
+      return
+    }
+
     const fetchSubscription = async () => {
       try {
         const res = await fetch("/api/subscription")
@@ -29,10 +36,9 @@ export default function DashboardPage() {
         console.error("Failed to fetch subscription:", error)
       }
     }
-    if (session?.user?.id) {
-      fetchSubscription()
-    }
-  })
+
+    fetchSubscription()
+  }, [session, status, router])
 
   // 비밀번호 변경
   const handlePasswordChange = async (e: React.FormEvent) => {
@@ -91,9 +97,8 @@ export default function DashboardPage() {
       setLoading(false)
     }
   }
-
-  if (!session) {
-    router.push("/auth/signin")
+  // 로딩 중일 때는 아무것도 렌더링하지 않음
+  if (status === "loading") {
     return null
   }
 
