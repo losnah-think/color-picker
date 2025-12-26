@@ -18,13 +18,20 @@ export default function Home() {
   const paletteRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
+    if (status === "loading") return;
+    
+    if (!session) {
+      router.push("/auth/signin");
+      return;
+    }
+
     if (session?.user?.id) {
       fetch("/api/subscription")
         .then((res) => res.json())
         .then((data) => setSubscription(data))
         .catch((err) => console.error("Failed to fetch subscription:", err));
     }
-  }, [session]);
+  }, [session, status, router]);
 
   const examplePrompts = [
     "북유럽 미니멀 스타일의 거실. 밝고 통풍감 있는 느낌. 자연 소재를 활용한 따뜻함",
@@ -40,6 +47,12 @@ export default function Home() {
   const handleGeneratePalette = async () => {
     if (!session) {
       router.push("/auth/signin");
+      return;
+    }
+
+    // subscription이 로드되는 동안 대기
+    if (subscription === null) {
+      alert("구독 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
       return;
     }
 
