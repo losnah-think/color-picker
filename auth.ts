@@ -85,6 +85,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             clientId: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
             allowDangerousEmailAccountLinking: true,
+            authorization: {
+              params: {
+                prompt: "consent",
+              },
+            },
           }),
         ]
       : []),
@@ -135,6 +140,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // 다른 도메인의 URL은 baseUrl로 리다이렉트
       else if (new URL(url).origin === baseUrl) return url
       return baseUrl
+    },
+    async signIn({ user, account, profile }: any) {
+      // OAuth 프로필 확인
+      if (account?.provider === "google") {
+        console.log("Google OAuth sign-in:", {
+          provider: account.provider,
+          email: user.email,
+          name: user.name,
+        })
+        return true
+      }
+      return true
     },
     async jwt({ token, user, account }: any) {
       if (user) {
