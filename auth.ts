@@ -1,0 +1,124 @@
+import NextAuth from "next-auth"
+import CredentialsProvider from "next-auth/providers/credentials"
+import GoogleProvider from "next-auth/providers/google"
+import { PrismaAdapter } from "@auth/prisma-adapter"
+import { getPrismaClient } from "@/lib/prisma"
+import bcrypt from "bcryptjs"
+
+const prisma = getPrismaClient()
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  adapter: PrismaAdapter(prisma),
+  providers: [
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials: any) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("이메일과 비밀번호를 입력해주세요.")
+        }
+
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              password: true,
+            },
+          })
+
+          if (!user) {
+            throw new Error("등록되지 않은 이메일입니다.")
+          }
+
+          if (!user.password) {
+            throw new Error("비밀번호가 설정되지 않았습니다.")
+          }
+
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          )
+
+          if (!isPasswordValid) {
+            throw new Error("비밀번호가 올바르지 않습니다.")
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          }
+        } catch (error: any) {
+          console.error("Authorization error:", error)
+          throw new Error(error.message || "로그인 중 오류가 발생했습니다.")
+        }
+      },
+    }),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            allowDangerousEmailAccountLinking: true,
+          }),
+        ]
+      : []),
+  ],
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60,
+    updateAge: 24 * 60 * 60,
+  },
+  callbacks: {
+    async jwt({ token, user, account }: any) {
+      if (user) {
+        token.sub = user.id
+        token.email = user.email
+      }
+      if (account) {
+        token.provider = account.provider
+      }
+      return token
+    },
+    async session({ session, token }: any) {
+      if (session.user) {
+        session.user.id = token.sub
+      }
+
+      // Google OAuth 사용자를 위해 구독 정보 확인/생성
+      if (token.provider === "google" && token.sub) {
+        try {
+          const existingSubscription = await prisma.subscription.findUnique({
+            where: { userId: token.sub },
+          })
+
+          if (!existingSubscription) {
+            console.log("Creating subscription for Google user:", token.sub)
+            await prisma.subscription.create({
+              data: {
+                userId: token.sub,
+                status: "INACTIVE",
+                plan: "FREE",
+              },
+            })
+          }
+        } catch (error) {
+          console.error("Subscription creation error:", error)
+        }
+      }
+
+      return session
+    },
+  },
+  pages: {
+    signIn: "/auth/signin",
+    error: "/auth/error",
+  },
+  trustHost: true,
+})
