@@ -163,10 +163,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   callbacks: {
     async redirect({ url, baseUrl }: any) {
-      // 절대 URL인 경우 그대로 사용
+      // 상대 경로는 baseUrl과 함께 반환
       if (url.startsWith("/")) return `${baseUrl}${url}`
-      // 다른 도메인의 URL은 baseUrl로 리다이렉트
+      // baseUrl과 같은 도메인이면 그대로 사용
       else if (new URL(url).origin === baseUrl) return url
+      // 다른 도메인은 baseUrl로 리다이렉트
       return baseUrl
     },
     async signIn({ user, account, profile }: any) {
