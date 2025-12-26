@@ -5,7 +5,8 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // 공개 경로 - 인증 필요 없음
-  const publicPaths = ["/auth/signin", "/auth/signup", "/auth/error", "/api/auth"]
+  // API 엔드포인트는 각 라우트에서 개별 인증 처리
+  const publicPaths = ["/auth/signin", "/auth/signup", "/auth/error", "/api"]
   const isPublicPath = publicPaths.some((path) => pathname.startsWith(path))
 
   if (isPublicPath) {

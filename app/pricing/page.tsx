@@ -72,6 +72,8 @@ export default function PricingPage() {
     setLoading(planName)
 
     try {
+      console.log("구독 요청 중...", { priceId, planName })
+      
       const response = await fetch("/api/subscribe", {
         method: "POST",
         headers: {
@@ -80,14 +82,26 @@ export default function PricingPage() {
         body: JSON.stringify({ priceId }),
       })
 
+      console.log("응답 상태:", response.status)
       const data = await response.json()
+      console.log("응답 데이터:", data)
+
+      if (!response.ok) {
+        console.error("API 에러:", data.error)
+        alert(data.error || "구독 처리 중 오류가 발생했습니다.")
+        return
+      }
 
       if (data.url) {
+        console.log("Stripe 체크아웃 URL로 이동:", data.url)
         window.location.href = data.url
+      } else {
+        console.error("체크아웃 URL이 없음")
+        alert("결제 페이지를 열 수 없습니다. 다시 시도해주세요.")
       }
     } catch (error) {
       console.error("Subscription error:", error)
-      alert("구독 처리 중 오류가 발생했습니다.")
+      alert(`구독 처리 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`)
     } finally {
       setLoading(null)
     }
