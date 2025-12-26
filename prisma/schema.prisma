@@ -76,6 +76,10 @@ model Subscription {
   status               SubscriptionStatus @default(INACTIVE)
   plan                 SubscriptionPlan   @default(FREE)
   
+  // 사용량 추적
+  usedCountThisMonth   Int                @default(0)
+  lastResetDate        DateTime           @default(now())
+  
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 }

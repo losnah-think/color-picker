@@ -134,7 +134,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         : 'authjs.session-token',
       options: {
         httpOnly: true,
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        sameSite: 'lax',
         path: '/',
         secure: process.env.NODE_ENV === 'production',
       },
@@ -144,7 +144,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         ? '__Secure-authjs.callback-url'
         : 'authjs.callback-url',
       options: {
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        httpOnly: true,
+        sameSite: 'lax',
         path: '/',
         secure: process.env.NODE_ENV === 'production',
       },
@@ -155,7 +156,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         : 'authjs.csrf-token',
       options: {
         httpOnly: true,
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        sameSite: 'lax',
         path: '/',
         secure: process.env.NODE_ENV === 'production',
       },

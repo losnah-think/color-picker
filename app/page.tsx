@@ -15,6 +15,7 @@ export default function Home() {
   const [similarImages, setSimilarImages] = useState<any>(null);
   const [loadingImages, setLoadingImages] = useState(false);
   const [subscription, setSubscription] = useState<any>(null);
+  const [usedCount, setUsedCount] = useState(0);
   const paletteRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
@@ -30,6 +31,13 @@ export default function Home() {
         .then((res) => res.json())
         .then((data) => setSubscription(data))
         .catch((err) => console.error("Failed to fetch subscription:", err));
+      
+      // 세션 스토리지에서 이번 달 사용 횟수 불러오기
+      const today = new Date().toISOString().split('T')[0];
+      const stored = localStorage.getItem(`usage_${session.user.id}_${today}`);
+      if (stored) {
+        setUsedCount(parseInt(stored, 10));
+      }
     }
   }, [session, status, router]);
 
@@ -69,6 +77,13 @@ export default function Home() {
     // subscription이 로드되는 동안 대기
     if (subscription === null) {
       alert("구독 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+      return;
+    }
+
+    // 월 제한 횟수 확인
+    const monthlyLimit = getMonthlyLimit(subscription.plan);
+    if (monthlyLimit !== -1 && usedCount >= monthlyLimit) {
+      alert(`이번 달 사용 횟수(${monthlyLimit}회)를 모두 사용했습니다. 다음 달에 다시 이용해주세요.`);
       return;
     }
 
@@ -112,6 +127,12 @@ export default function Home() {
       setPalette(data);
       setSelectedPalette(null);
       setSimilarImages(null);
+      
+      // 사용 횟수 증가
+      const today = new Date().toISOString().split('T')[0];
+      const newCount = usedCount + 1;
+      setUsedCount(newCount);
+      localStorage.setItem(`usage_${session.user.id}_${today}`, String(newCount));
     } catch (error) {
       console.error("Error:", error);
       alert("팔레트 생성 중 오류가 발생했습니다.");
@@ -191,7 +212,7 @@ export default function Home() {
                   {subscription.plan}
                 </span>
                 {getMonthlyLimit(subscription.plan) > 0 && (
-                  <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded">
+                  <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded whitespace-nowrap">
                     월 {getMonthlyLimit(subscription.plan)}회 중
                   </span>
                 )}
@@ -201,6 +222,11 @@ export default function Home() {
                   </span>
                 )}
               </div>
+            )}
+            {!subscription && session && (
+              <span className="text-xs text-slate-500 dark:text-slate-400 animate-pulse">
+                구독 정보 로딩 중...
+              </span>
             )}
           </div>
           <div className="flex items-center gap-4">
@@ -270,6 +296,41 @@ export default function Home() {
       )}
 
       <div className="max-w-5xl mx-auto">
+        {/* 구독 정보 섹션 */}
+        {session && subscription && (
+          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">현재 플랜</p>
+                <div className="flex items-center gap-3">
+                  <span className={`text-lg font-bold ${
+                    subscription.plan === "PRO" ? "text-purple-600 dark:text-purple-400" :
+                    subscription.plan === "ENTERPRISE" ? "text-red-600 dark:text-red-400" :
+                    subscription.plan === "BASIC" ? "text-blue-600 dark:text-blue-400" :
+                    "text-slate-600 dark:text-slate-400"
+                  }`}>
+                    {subscription.plan}
+                  </span>
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                        {getMonthlyLimit(subscription.plan) > 0 ? (
+                          <>이번 달 사용: <span className="text-purple-600 dark:text-purple-400">{usedCount}</span> / {getMonthlyLimit(subscription.plan)}회</>
+                        ) : (
+                          <>무제한 사용 가능</>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <a href="/pricing" className="text-sm text-purple-600 dark:text-purple-400 hover:underline font-medium">
+                플랜 업그레이드 →
+              </a>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-10 mb-10">
           <div className="text-center mb-10">
             <h1 className="text-5xl font-light mb-3 text-slate-900 dark:text-white tracking-tight">
