@@ -22,15 +22,14 @@ export default function SignInPage() {
       const result = await signIn("credentials", {
         email,
         password,
-        redirect: true,
-        callbackUrl: "/"
+        redirect: false,
       })
 
-      // redirect: true이면 signIn이 성공 시 자동으로 리다이렉트됨
-      // 여기에 도달하면 오류가 있다는 뜻
-      if (result?.error || result?.code === "CredentialsSignin") {
+      if (result?.error) {
         setError("이메일 또는 비밀번호가 올바르지 않습니다.")
         setLoading(false)
+      } else if (result?.ok) {
+        router.push("/")
       }
     } catch (error) {
       console.error("Sign in error:", error)
