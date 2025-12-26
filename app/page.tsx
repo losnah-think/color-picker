@@ -184,6 +184,12 @@ export default function Home() {
                   {session.user?.email}
                 </span>
                 <a
+                  href="/dashboard"
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  마이페이지
+                </a>
+                <a
                   href="/pricing"
                   className="text-sm text-purple-600 dark:text-purple-400 hover:underline"
                 >
