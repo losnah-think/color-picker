@@ -109,7 +109,7 @@ export default function PricingPage() {
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`bg-white rounded-2xl shadow-lg p-8 relative ${
+              className={`bg-white rounded-2xl shadow-lg p-8 relative flex flex-col h-full ${
                 plan.popular ? "ring-2 ring-purple-500" : ""
               }`}
             >
@@ -129,7 +129,7 @@ export default function PricingPage() {
                 <span className="text-gray-600">/월</span>
               </div>
 
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-3 mb-8 flex-grow">
                 {plan.features.map((feature, index) => (
                   <li key={index} className="flex items-start">
                     <svg
