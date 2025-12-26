@@ -13,6 +13,18 @@ try {
   throw new Error("Database connection failed")
 }
 
+// Google OAuth 환경 변수 검증
+const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim()
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim()
+
+if (process.env.NODE_ENV === 'production') {
+  if (!googleClientId || !googleClientSecret) {
+    console.warn('Google OAuth not configured in production')
+  } else {
+    console.log('Google OAuth configured:', { googleClientId: googleClientId.substring(0, 20) + '...' })
+  }
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
   useSecureCookies: process.env.NODE_ENV === 'production',
@@ -79,16 +91,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       },
     }),
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+    ...(googleClientId && googleClientSecret
       ? [
           GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            clientId: googleClientId,
+            clientSecret: googleClientSecret,
             allowDangerousEmailAccountLinking: true,
             authorization: {
               params: {
                 prompt: "consent",
               },
+            },
+            profile(profile: any) {
+              console.log("Google profile received:", {
+                id: profile.id,
+                email: profile.email,
+                name: profile.name,
+              })
+              return {
+                id: profile.sub || profile.id,
+                name: profile.name,
+                email: profile.email,
+                image: profile.picture,
+              }
             },
           }),
         ]
@@ -148,8 +173,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           provider: account.provider,
           email: user.email,
           name: user.name,
+          userId: user.id,
         })
-        return true
+        try {
+          return true
+        } catch (error) {
+          console.error("Google sign-in error:", error)
+          return false
+        }
       }
       return true
     },
