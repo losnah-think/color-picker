@@ -19,6 +19,14 @@
 .DS_Store
 *.pem
 
+# Environment setup guides (contain sensitive info)
+vercel-env-setup.md
+SETUP_GUIDE.md
+GOOGLE_OAUTH_SETUP.md
+GOOGLE_OAUTH_SETUP_GUIDE.md
+GOOGLE_OAUTH_TESTING.md
+MIGRATION_COMPLETE.md
+
 # debug
 npm-debug.log*
 yarn-debug.log*
